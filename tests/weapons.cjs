@@ -1,0 +1,43 @@
+const assert = require('node:assert/strict');
+global.THREE = require('../lib/three.min.js');
+global.document = { createElement: () => ({ style: {} }), body: { appendChild() {} } };
+
+(async () => {
+  const { Weapons } = await import('../js/weapons.js');
+  const v = { spec: { weapons: true, category: 'plane' }, pos: new THREE.Vector3(0, 100, 0), pitch: 0, yaw: 0, roll: 0 };
+  const game = { vehicle: v, scene: new THREE.Scene(), sound: { gun() {}, clunk() {}, boom() {} }, hud: { msg() {} }, haptic() {} };
+  const w = new Weapons(game), keys = {}, input = { down: key => !!keys[key] };
+  const world = { terrainH: () => 0, hitsBuilding: () => false };
+  const tick = (dt = 0.05, previous = v.pos.clone()) => w.update(dt, input, world, previous);
+  tick(); keys.KeyJ = true; tick();
+  assert.equal(w.rounds, 599); assert.equal(w.projectiles.length, 1);
+  tick(); assert.equal(w.rounds, 599, 'cadencia limitada');
+  tick(); assert.equal(w.rounds, 598);
+  keys.KeyJ = false; keys.KeyB = true;
+  tick(0.05, new THREE.Vector3(-1, 100, 0));
+  assert.equal(w.bombs, 7);
+  const bomb = w.projectiles.find(p => p.bomb);
+  assert.equal(bomb.velocity.x, 20, 'la bomba hereda el movimiento');
+  assert.ok(bomb.velocity.y < -2, 'la gravedad acelera la caída');
+  for (let i = 0; i < 20; i++) tick();
+  assert.equal(w.bombs, 7, 'mantener B no suelta más bombas');
+  keys.KeyB = false; tick(); keys.KeyB = true; tick(); assert.equal(w.bombs, 6);
+  w.reset(); assert.equal(w.projectiles.length, 0); assert.equal(game.scene.children.length, 0);
+  keys.KeyB = false; v.pos.y = 2; tick(); keys.KeyB = true; tick(); assert.equal(w.bombs, 8, 'no lanzar en tierra');
+  keys.KeyB = false; v.pos.y = 100; keys.KeyJ = true;
+  v.spec.weapons = false; tick(); assert.equal(w.rounds, 600, 'civil desarmado');
+  v.spec.weapons = true; v.crashed = true; tick(); assert.equal(w.rounds, 600);
+  v.crashed = false; v.warp = true; tick(); assert.equal(w.rounds, 600);
+  v.warp = false; w.reset();
+  // Una pared más delgada que el recorrido del fotograma debe interceptar el disparo.
+  world.hitsBuilding = p => p.z < -24 && p.z > -26;
+  tick(); assert.equal(w.projectiles.length, 0); assert.ok(w.effects.length > 0);
+  keys.KeyJ = false; world.hitsBuilding = () => false; w.reset();
+  v.pos.y = 15; w.launch(true, new THREE.Vector3());
+  for (let i = 0; i < 40; i++) tick();
+  assert.equal(w.projectiles.length, 0, 'impacto de bomba contra terreno'); assert.ok(w.effects.length);
+  for (let i = 0; i < 40; i++) tick();
+  assert.equal(w.effects.length, 0, 'efectos temporales sin acumulación');
+  w.reset(); w.rounds = 0; keys.KeyJ = true; tick(); assert.equal(w.projectiles.length, 0, 'munición agotada');
+  console.log('OK: cadencia, bombas, inercia, gravedad, colisiones, límites y limpieza.');
+})().catch(e => { console.error(e); process.exitCode = 1; });

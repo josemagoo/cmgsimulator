@@ -19,6 +19,7 @@ export class Input {
     this.padHeld = {};                    // botones del mando que equivalen a teclas mantenidas (p. ej. Space)
     this.pad = { on: false }; this.prev = {};
     this.menuOpen = () => false;
+    this.combatActive = () => false;
     this.throttleSlider = null;           // 0..1 si el jugador usa el deslizador de gases
     this.orbit = { yaw: 0, pitch: 0, zoom: 1, drag: false, last: 0 };   // cámara libre
     this.handlers = {};
@@ -84,6 +85,7 @@ export class Input {
     this.pad.on = !!p;
     if (!p) {
       this.stick.x = this.touch.x; this.stick.y = this.touch.y; this.trigger = 0; this.padHeld.Space = false;
+      this.padHeld.KeyJ = this.padHeld.KeyB = false;
       return;
     }
     const dz = v => { const a = Math.abs(v); return a < 0.15 ? 0 : Math.sign(v) * Math.pow((a - 0.15) / 0.85, 1.4); };
@@ -92,6 +94,8 @@ export class Input {
     this.stick.x = clamp(this.touch.x + lx, -1, 1); this.stick.y = clamp(this.touch.y + ly, -1, 1);
     this.trigger = v(7) - v(6);
     this.padHeld.Space = b(0);
+    const combat = this.combatActive();
+    this.padHeld.KeyJ = combat && b(4); this.padHeld.KeyB = combat && b(5);
     const o = this.orbit;
     if (rx || ry) { o.yaw -= rx * dt * 2.6; o.pitch = clamp(o.pitch + ry * dt * 1.8, -0.4, 1.3); o.last = now; }
 
@@ -113,8 +117,8 @@ export class Input {
       if (edge('y', b(3))) this.emit('camera');
       if (edge('x', b(2))) this.emit('light');
       if (edge('b', b(1))) this.emit('warp');
-      if (edge('lb', b(4))) this.emit('timeDown');
-      if (edge('rb', b(5))) this.emit('timeUp');
+      if (edge('lb', b(4)) && !combat) this.emit('timeDown');
+      if (edge('rb', b(5)) && !combat) this.emit('timeUp');
       if (edge('rs', b(11))) this.resetOrbit();
       if (edge('dup', b(12))) this.emit('assist');
       if (edge('ddown', b(13))) this.emit('gear');

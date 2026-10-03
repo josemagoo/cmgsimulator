@@ -14,7 +14,7 @@ export const PLANE_SPECS = [
     vmax: 1500, stall: 250, thrust: 16, rollMax: 1.1, turn: 0.7, pitchRate: 0.7, maxImpact: 9, camK: 1.8, snd: [50, 140, 1200] },
   { id: 'super', name: 'Súper jet experimental', tag: 'Extremo', desc: 'Mach 2. Cruzas la ciudad en segundos: el mapa apenas alcanza a cargar.',
     vmax: 2400, stall: 290, thrust: 22, rollMax: 1.2, turn: 0.6, pitchRate: 0.7, maxImpact: 9, camK: 2.1, snd: [45, 170, 1500] },
-].map(p => ({ ...p, category: 'plane', retract: p.id !== 'cessna', vm: p.vmax / 3.6, st: p.stall / 3.6, rot: p.stall / 3.6 + 4, k: p.thrust / ((p.vmax / 3.6) ** 2) }));
+].map(p => ({ ...p, weapons: ['fighter', 'super'].includes(p.id), category: 'plane', retract: p.id !== 'cessna', vm: p.vmax / 3.6, st: p.stall / 3.6, rot: p.stall / 3.6 + 4, k: p.thrust / ((p.vmax / 3.6) ** 2) }));
 
 const BLK = phong(0x1a1a1a, 10);
 function navLight(parent, x, y, z, color) {

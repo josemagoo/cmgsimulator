@@ -180,6 +180,13 @@ body.touch #attrib { font-size: 7px; bottom: 1px; opacity: .5; }
   .card .row:last-child { display: none; } .card img { height: 46px; }
 }
 
+#weaponReticle { position: fixed; transform: translate(-50%, -50%); color: #b6ff94; font: 42px monospace; text-shadow: 0 1px 4px #000; pointer-events: none; z-index: 5; }
+#weaponReticle[hidden] { display: none; }
+#weaponStatus { color: #b6ff94; font: 12px "Segoe UI", sans-serif; margin-top: 5px; }
+#weaponStatus:empty { display: none; }
+#tBtns [data-combat] { color: #b6ff94; border-color: #77a764; font-size: 18px; }
+#tBtns [data-combat] small { display: block; font-size: 8px; }
+
 /* ----- Estilo GTA San Andreas (se activa con body.gta) ----- */
 body.gta { --o: -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000, -2px -2px 0 #000, 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, 3px 4px 6px rgba(0,0,0,.6); }
 .gta .panel { font-family: Impact, "Arial Black", "Haettenschweiler", sans-serif; letter-spacing: .6px; text-shadow: var(--o); }

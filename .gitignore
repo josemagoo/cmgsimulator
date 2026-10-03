@@ -3,6 +3,13 @@
 .env
 .env.*
 !.env.example
+/.deploy/
+/.vscode/sftp.json
+/.vscode/ftp-sync.json
+/.ftpconfig
+/.ftppass
+*.pem
+*.key
 
 # Cache descargada (conservar la proteccion de Apache)
 /api/_cache/*

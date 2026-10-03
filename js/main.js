@@ -6,6 +6,7 @@ import { Bus } from './events.js';
 import { Input } from './input.js';
 import { Progress } from './progress.js';
 import { Fx } from './fx.js';
+import { Weapons } from './weapons.js';
 import { Sound } from './sound.js';
 import { CameraRig } from './camera.js';
 import { Grade } from './grade.js';
@@ -47,6 +48,7 @@ class Game {
     this.hud = new HUD(this);
     this.fx = new Fx(this);
     this.sound = new Sound();
+    this.weapons = new Weapons(this);
     this.world = new World(this);
     this.world.sky.onClock = t => this.hud.setClock(t); this.world.sky.applyTime();
     this.rig = new CameraRig(this.camera, this.input);
@@ -94,6 +96,7 @@ class Game {
     const inp = this.input, sky = this.world.sky;
     const play = (name, fn) => inp.on(name, () => { if (!this.state.hangarOpen && this.ready) fn(); });
     inp.menuOpen = () => this.state.hangarOpen || this.settingsPanel.isOpen;
+    inp.combatActive = () => this.weapons.armed && !inp.menuOpen();
     inp.keyHandlers.push(e => this.settingsPanel.handleKey(e) || this.hangar.handleKey(e));
     inp.on('anykey', () => this.sound.start());
     inp.on('pad', on => this.hud.msg(on ? '🎮 Mando conectado' : '🎮 Mando desconectado', 3));
@@ -120,6 +123,7 @@ class Game {
 
   // ---- vehículo ----
   setVehicle(spec, place) {
+    this.weapons.reset();
     if (this.vehicle) this.vehicle.unmount();
     this.clearPreview();
     const v = this.vehicle = create(spec); this.spec = spec;
@@ -127,10 +131,11 @@ class Game {
     v.mount(this);
     v.spawn(place || spawnPlace(spec, this.world), this.world);
     this.rig.snap(v); this.input.resetOrbit(); this.input.emit('vehicle-reset');
-    if (this.touch) this.touch.configure(v.scheme());
+    if (this.touch) this.touch.configure(v.scheme(), !!spec.weapons);
     this.world.forceStream();
   }
   respawn() {
+    this.weapons.reset();
     const v = this.vehicle;
     this.fx.clear(); v.spawn(spawnPlace(this.spec, this.world), this.world);
     this.rig.snap(v); this.input.resetOrbit(); this.input.emit('vehicle-reset'); this.hud.msg('');
@@ -221,12 +226,18 @@ class Game {
     this.input.poll(dt, now);
     const menu = this.state.hangarOpen, v = this.vehicle, w = this.world;
     const active = menu && this.preview ? this.preview : v;
-    if (this.ready && !menu && !this.settingsPanel.isOpen && !portrait) { v.update(dt, this.input, w); this.missions.update(dt); this.achievements.update(dt); }
+    const playing = this.ready && !menu && !this.settingsPanel.isOpen && !portrait;
+    if (playing) {
+      const previousPos = v.pos.clone(); v.update(dt, this.input, w);
+      this.weapons.update(dt, this.input, w, previousPos);
+      this.missions.update(dt); this.achievements.update(dt);
+    } else this.weapons.bombHeld = this.input.down('KeyB');
     w.update(dt, now, active.pos, this.camera.position, active.approach || null);
     this.fx.update(dt, w);
     v.animate(dt, now, w);
     if (active !== v) active.animate(dt, now, w);
     this.rig.update(dt, now, active, w, menu);
+    this.weapons.drawAim(playing);
     if (this.rig.view && this.rig.view.g.visible) this.rig.view.update(v.instr(w), v.steerAngle);
     this.slowTick(now);
     this.hud.update(dt);

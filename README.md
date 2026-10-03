@@ -32,6 +32,16 @@ videos de las calles y datos urbanos propios en `js/data/`):
 - **Repartos**: casas con jardín delantero y **cercas** (reja sobre murete, malla verde o murete de balaustres), portales con columnas.
 - **Árboles** de OSM, de calle y detectados en la foto (copas con su color real), palmas reales y algún flamboyán.
 
+## Armamento de combate
+
+El caza, el súper jet experimental y el helicóptero de combate llevan un cañón automático (600 disparos) y 8 bombas. Los vehículos civiles no llevan armas.
+
+- **Teclado:** mantén **J** para disparar; pulsa **B** para soltar una bomba.
+- **Mando:** mantén **LB** para disparar; pulsa **RB** para soltar una bomba. En estos vehículos la hora se cambia con T/Y o desde las opciones táctiles.
+- **Móvil:** botones **FUEGO** (mantener) y **BOMBA** en la barra de controles.
+
+La mira marca la dirección del cañón. Las bombas conservan la velocidad del vehículo y caen por gravedad; debes estar a más de 5 m del terreno para soltarlas. Los disparos y bombas producen efectos al impactar contra el terreno o los edificios cargados, sin destruir edificios ni dañar el tráfico. El armamento queda desactivado durante el crucero rápido, en los menús y tras un choque. Reiniciar o cambiar de vehículo repone la munición y elimina los proyectiles.
+
 ## Minimapa
 
 Tipo radar, con el plano real de la ciudad: calles (las principales en amarillo, peatonales en beige, de tierra en marrón), edificios,

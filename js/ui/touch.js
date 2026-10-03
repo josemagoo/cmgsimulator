@@ -19,6 +19,8 @@ export class TouchUI {
       <div id="tStrafe" data-for="heli"><button data-key="KeyQ">◀</button><button data-key="KeyE">▶</button></div>
       <button id="tHand" data-for="car" data-key="Space">FRENO<br>MANO</button>
       <div id="tBtns">
+        <button data-combat data-key="KeyJ" title="Mantener para disparar">J<small>FUEGO</small></button>
+        <button data-combat data-key="KeyB" title="Soltar bomba">B<small>BOMBA</small></button>
         <button data-act="menu" title="Menú">☰</button>
         <button data-act="camera" title="Cámara">📷</button>
         <button data-act="reset" title="Reiniciar">🔄</button>
@@ -43,15 +45,16 @@ export class TouchUI {
   }
 
   // 'plane' | 'heli' | 'car': muestra solo los controles que usa el vehículo
-  configure(scheme) {
+  configure(scheme, armed = false) {
     this.scheme = scheme;
+    this.root.querySelectorAll('[data-combat]').forEach(el => { el.style.display = armed ? '' : 'none'; });
     this.root.querySelectorAll('[data-for]').forEach(el => { el.style.display = el.dataset.for.split(' ').includes(scheme) ? '' : 'none'; });
     $('tThrLbl').textContent = scheme === 'heli' ? 'ALTURA' : 'GASES';
     this.root.classList.toggle('heli', scheme === 'heli');
     this.more(false);
     this.input.throttleSlider = null; this.setSlider(0);
   }
-  show(on) { this.root.style.display = on ? 'block' : 'none'; if (!on) this.more(false); }
+  show(on) { this.root.style.display = on ? 'block' : 'none'; if (!on) { this.more(false); this.input.keys.KeyJ = this.input.keys.KeyB = false; } }
   more(on) {
     this.root.classList.toggle('more', on);
     clearTimeout(this.moreT); if (on) this.moreT = setTimeout(() => this.more(false), 6000);

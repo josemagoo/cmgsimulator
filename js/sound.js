@@ -86,4 +86,5 @@ export class Sound {
   click() { this._tone(1400, 0.06, 0.04, 'square'); }
   chime() { this._tone(660, 0.12, 0.5); setTimeout(() => this._tone(990, 0.12, 0.7), 140); setTimeout(() => this._tone(1320, 0.1, 0.9), 300); }
   whoosh() { /* sin soplido */ }
+  gun() { this._noiseBurst(1800, 0.16, 0.07); this._tone(120, 0.1, 0.06, 'square', 55); }
 }

@@ -26,6 +26,7 @@ export class HUD {
     const g = this.game, v = g.vehicle, h = v.hud(), show = (el, on) => this.vis(el, on), T = (id, x) => this.txt(id, x);
     if (this.timer > 0 && (this.timer -= dt) <= 0) this.msg('');
     T('pname', h.name);
+    T('weaponStatus', g.state.flying ? g.weapons.status() : '');
     T('spd', Math.round(h.speedKmh));
     show(this.rows.mach, h.mach !== undefined); if (h.mach !== undefined) T('mach', h.mach.toFixed(2));
     show(this.rows.alt, h.alt !== undefined); if (h.alt !== undefined) T('alt', Math.round(h.alt));

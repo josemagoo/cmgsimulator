@@ -9,7 +9,7 @@ export const HELI_SPECS = [
     vmax: 260, climb: 9, descend: 6, yawRate: 0.9, ease: 0.7, maxImpact: 5, camK: 1.3, startMsg: 'sube con Shift (o el gatillo derecho) para despegar' },
   { id: 'heli-combat', name: 'Helicóptero de combate', tag: 'Experto', desc: 'Delgado y muy rápido, con alas cortas: responde con nervio.',
     vmax: 330, climb: 12, descend: 8, yawRate: 1.5, ease: 0.4, maxImpact: 5.5, camK: 1.25, startMsg: 'sube con Shift (o el gatillo derecho) para despegar' },
-].map(h => ({ ...h, category: 'heli', vm: h.vmax / 3.6 }));
+].map(h => ({ ...h, weapons: h.id === 'heli-combat', category: 'heli', vm: h.vmax / 3.6 }));
 
 const LOOKS = {
   'heli-light': { body: 0xc8282d, acc: 0xf2f2f2, sx: 1, len: 1, blades: 2, rotorR: 5.4, tandem: false, stub: false, skid: 1.6 },
