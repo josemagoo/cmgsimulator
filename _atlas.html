@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#556}canvas{display:block}</style></head><body>
+<script src="lib/three.min.js"></script>
+<script type="module">
+import { facadeMaps } from './js/world/facades.js';
+const maps = facadeMaps(null);
+const d = maps.atlas.image, W = d.width, H = d.height;
+const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+const id = g.createImageData(W, H);
+const mode = location.hash === '#mask' ? 1 : 0;
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  const s = ((H - 1 - y) * W + x) * 4, t = (y * W + x) * 4, a = d.data[s + 3];
+  if (mode) { id.data[t] = id.data[t + 1] = id.data[t + 2] = a; }
+  else if (a < 30) { id.data[t] = 85; id.data[t + 1] = 85; id.data[t + 2] = 102; }
+  else { id.data[t] = d.data[s]; id.data[t + 1] = d.data[s + 1]; id.data[t + 2] = d.data[s + 2]; }
+  id.data[t + 3] = 255;
+}
+g.putImageData(id, 0, 0);
+c.style.width = '1600px'; c.style.height = '800px';
+document.body.appendChild(c);
+</script></body></html>

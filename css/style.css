@@ -1,0 +1,207 @@
+html, body { margin: 0; height: 100%; overflow: hidden; background: #bfdbf0; font-family: "Segoe UI", Arial, sans-serif; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+canvas { display: block; }
+#gl { position: fixed; left: 0; top: 0; }
+body.touch { touch-action: manipulation; }
+.panel { position: fixed; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); pointer-events: none; }
+
+/* ----- HUD ----- */
+#hud { left: 16px; bottom: 16px; background: rgba(10,20,35,.55); backdrop-filter: blur(4px); padding: 12px 16px; border-radius: 12px; font: 600 15px monospace; line-height: 1.6; min-width: 210px; }
+#hud .big { font-size: 26px; }
+#bar { width: 100%; height: 8px; background: rgba(255,255,255,.25); border-radius: 4px; margin-top: 4px; }
+#bar i { display: block; height: 100%; width: 0; background: #ffb400; border-radius: 4px; }
+#help { right: 16px; top: 16px; background: rgba(10,20,35,.6); backdrop-filter: blur(4px); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.65; }
+#help b { background: rgba(255,255,255,.2); padding: 1px 7px; border-radius: 4px; font-family: monospace; }
+#title { left: 16px; top: 14px; font-size: 18px; font-weight: 700; letter-spacing: .5px; }
+#title small { display: block; font-weight: 400; font-size: 12px; opacity: .9; }
+#msg { left: 0; right: 0; top: 14%; text-align: center; font-size: 32px; font-weight: 700; opacity: 0; transition: opacity .4s; padding: 0 12px; }
+#hint { left: 0; right: 0; top: 24%; text-align: center; font-size: 19px; padding: 0 12px; }
+#xtra { font-size: 12px; font-weight: 400; color: #cfe0f0; line-height: 1.3; max-width: 260px; }
+#instr { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); width: 340px; height: 136px; display: none; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); z-index: 3; }
+#mission { left: 50%; top: 10px; transform: translateX(-50%); background: rgba(10,20,35,.72); border: 1px solid rgba(255,201,60,.55); border-radius: 12px; padding: 8px 14px; font-size: 14px; text-align: center; min-width: 240px; max-width: 70vw; display: none; }
+#mission b { color: #ffd56b; } #mission small { opacity: .85; display: block; font-size: 12px; }
+#toasts { position: fixed; right: 16px; bottom: 60px; display: flex; flex-direction: column; gap: 8px; z-index: 25; pointer-events: none; }
+.toast { display: flex; gap: 10px; align-items: center; background: rgba(10,20,35,.88); border: 1px solid #ffc93c; border-radius: 12px; padding: 10px 14px; color: #fff; font-size: 14px; transition: opacity .6s, transform .6s; animation: tin .4s; max-width: 320px; }
+.toast span { font-size: 26px; } .toast.out { opacity: 0; transform: translateX(30px); }
+@keyframes tin { from { opacity: 0; transform: translateX(40px); } }
+#fps { left: 16px; top: 70px; font: 12px monospace; color: #9f9; }
+#poi { left: 0; right: 0; top: 76px; text-align: center; font-size: 16px; opacity: .95; }
+#mapbox { right: 16px; bottom: 16px; text-align: center; font-size: 12px; line-height: 1.5; }
+#mm { display: block; width: 190px; height: 190px; }
+body.drive #mm { width: 260px; height: 260px; }
+#street { font-size: 16px; font-weight: 700; min-height: 20px; margin-bottom: 4px; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gta #street { font-size: 22px; color: #fff; text-transform: uppercase; letter-spacing: .8px; }
+#warn { left: 0; right: 0; bottom: 60px; text-align: center; font-size: 16px; color: #ffd27a; padding: 0 12px; }
+#attrib { left: 0; right: 0; bottom: 3px; text-align: center; font-size: 10px; opacity: .7; text-shadow: 0 1px 2px #000; }
+body.hg #hud, body.hg #mapbox, body.hg #hint, body.hg #poi, body.hg #warn, body.hg #help { display: none; }
+#loading { position: fixed; inset: 0; background: linear-gradient(#1b4f8f, #7db4de); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px; transition: opacity .6s; z-index: 30; text-align: center; padding: 0 20px; }
+#loadbar { width: 260px; height: 8px; background: rgba(255,255,255,.25); border-radius: 4px; margin-top: 16px; }
+#loadbar i { display: block; height: 100%; width: 0; background: #ffb400; border-radius: 4px; transition: width .25s; }
+#loading small { font-size: 14px; opacity: .85; margin-top: 10px; max-width: 460px; }
+#rotate { display: none; position: fixed; inset: 0; z-index: 40; background: rgba(6,16,32,.96); color: #fff; align-items: center; justify-content: center; text-align: center; font-size: 22px; line-height: 1.6; }
+
+/* ----- Menú: elegir vehículo y destino ----- */
+#hangar { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: space-between; align-items: center; z-index: 20; color: #fff;
+  background: linear-gradient(rgba(4,12,26,.55), rgba(4,12,26,0) 22%, rgba(4,12,26,0) 40%, rgba(4,12,26,.92) 78%); padding: 18px 16px 18px; box-sizing: border-box; }
+#hgHead { text-align: center; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+.brand { font-size: 46px; font-weight: 800; letter-spacing: 12px; text-indent: 12px; background: linear-gradient(#fff, #ffd56b); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+.sub { font-size: 15px; letter-spacing: 3px; text-transform: uppercase; opacity: .9; margin-top: 2px; }
+#hgFact { max-width: 620px; text-align: center; font-size: 13px; line-height: 1.45; background: rgba(6,16,32,.55); padding: 8px 14px; border-radius: 10px; margin: 10px auto 0; border: 1px solid rgba(255,255,255,.15); }
+#hgBottom { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+#hgBar { display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; }
+#hgTabs { display: flex; gap: 6px; }
+.tab { font: 600 14px "Segoe UI", Arial; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); border-radius: 18px; padding: 6px 16px; cursor: pointer; }
+.tab.on { background: #ffc93c; color: #1a1a1a; border-color: #ffc93c; }
+#hgGo { font: 800 16px "Segoe UI", Arial; color: #1a1a1a; background: linear-gradient(#ffd56b, #ffb400); border: 0; border-radius: 22px; padding: 9px 26px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+#hgGo:active { transform: scale(.97); }
+#cards { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1300px; }
+.card { box-sizing: border-box; width: 214px; background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.22); border-radius: 16px; padding: 10px 12px 12px; cursor: pointer; transition: transform .15s, border-color .15s, background .15s; backdrop-filter: blur(6px); position: relative; }
+.card:hover, .card.sel { transform: translateY(-8px); border-color: #ffc93c; background: linear-gradient(160deg, rgba(255,201,60,.30), rgba(255,255,255,.08)); box-shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,201,60,.4); }
+.card img { width: 100%; height: 84px; object-fit: contain; display: block; }
+.card h3 { margin: 0 0 2px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #2f9c5a; font-weight: 700; white-space: nowrap; }
+.t1 { background: #b8951f; } .t2 { background: #d9782b; } .t3 { background: #c8282d; } .t4 { background: #8a4fc0; }
+.card .vmax { font-size: 21px; font-weight: 800; color: #ffd56b; line-height: 1.1; }
+.card .vmax small { font-size: 12px; font-weight: 600; opacity: .85; color: #fff; }
+.card p { font-size: 10.5px; opacity: .88; min-height: 28px; margin: 2px 0 4px; line-height: 1.3; }
+.row { display: flex; align-items: center; font-size: 10px; gap: 6px; margin-top: 2px; opacity: .95; }
+.row span { width: 62px; }
+.bar { flex: 1; height: 5px; background: rgba(255,255,255,.2); border-radius: 3px; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, #ffb400, #ff6a3d); border-radius: 3px; }
+.num { position: absolute; top: 8px; left: 10px; font-size: 11px; font-weight: 800; background: rgba(0,0,0,.45); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+#missionRow, #destRow { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; align-items: center; max-width: 1100px; font-size: 13px; }
+#missionRow .lbl, #destRow .lbl { opacity: .85; margin-right: 4px; }
+#hgStats { font-size: 13px; margin-top: 6px; color: #ffd56b; font-weight: 600; }
+#hgSet { font: 700 18px sans-serif; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.14); color: #fff; cursor: pointer; }
+.chip { padding: 3px 10px; font-size: 12px; border-radius: 16px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); cursor: pointer; transition: .15s; }
+.chip:hover { background: rgba(255,255,255,.25); }
+.chip.on { background: #ffb400; color: #1a1a1a; font-weight: 700; border-color: #ffb400; }
+.chip.lock { opacity: .45; cursor: not-allowed; }
+#hgKeys { font-size: 12px; opacity: .8; letter-spacing: .5px; }
+
+/* ----- Ajustes y logros ----- */
+#settings { position: fixed; inset: 0; z-index: 40; background: rgba(4,12,26,.82); display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 10px; box-sizing: border-box; }
+#settings .sbox { width: min(760px, 100%); max-height: 100%; overflow-y: auto; background: rgba(14,28,48,.96); border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 14px 18px 18px; color: #fff; }
+#settings h2 { font-size: 18px; margin: 14px 0 8px; display: flex; align-items: center; gap: 10px; } #settings h2 small { font-size: 12px; opacity: .8; font-weight: 600; color: #ffd56b; } #settings h2 button { margin-left: auto; }
+#settings button { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 6px 12px; cursor: pointer; font: 600 13px "Segoe UI", Arial; }
+.srow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; font-size: 14px; } .srow > span { min-width: 120px; opacity: .9; }
+#settings select { background: #14253c; color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 5px 8px; font-size: 14px; }
+.chk { display: flex; align-items: center; gap: 6px; cursor: pointer; } .srow input[type=range] { width: 190px; }
+.ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.ach .a { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; column-gap: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.06); opacity: .5; filter: grayscale(1); }
+.ach .a.on { opacity: 1; filter: none; background: rgba(255,201,60,.16); border: 1px solid rgba(255,201,60,.5); }
+.ach .a span { grid-row: 1 / 3; font-size: 26px; align-self: center; text-align: center; } .ach .a b { font-size: 13px; } .ach .a small { font-size: 11px; opacity: .8; }
+.best { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 14px; font-size: 13px; } .best div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.1); } .best b { color: #ffd56b; }
+
+/* ----- Controles táctiles (estilo GTA: negro translúcido con borde negro; pulsado en amarillo) ----- */
+#touch { position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none; }
+#touch > *, #touch button { pointer-events: auto; touch-action: none; }
+#touch button { font: 700 12px "Segoe UI", Arial; color: #fff; background: rgba(0,0,0,.42); border: 2px solid rgba(0,0,0,.9); box-shadow: inset 0 0 0 2px rgba(255,255,255,.3), 0 2px 6px rgba(0,0,0,.35); border-radius: 50%; cursor: pointer; padding: 0; text-shadow: 0 1px 2px #000; }
+#touch button.on, #touch button:active { background: rgba(243,198,74,.92); color: #111; text-shadow: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.6); }
+#touch button small { display: block; font: 400 9px Impact, "Arial Black", sans-serif; letter-spacing: .5px; margin-top: 1px; }
+/* palanca flotante: se toca en cualquier punto de la mitad izquierda */
+#tZone { position: absolute; left: 0; top: 60px; bottom: 0; width: 44%; }
+#tStick { position: absolute; left: calc(18px + env(safe-area-inset-left)); bottom: 18px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.15), rgba(0,0,0,.4)); border: 2px solid rgba(0,0,0,.85); box-shadow: inset 0 0 0 2px rgba(255,255,255,.3); pointer-events: none !important; opacity: .7; transition: opacity .2s; }
+#tStick.live { opacity: 1; transition: none; }
+#tStick::before, #tStick::after { content: ""; position: absolute; left: 50%; top: 12px; bottom: 12px; width: 2px; margin-left: -1px; background: rgba(255,255,255,.2); }
+#tStick::after { left: 12px; right: 12px; top: 50%; bottom: auto; width: auto; height: 2px; margin: -1px 0 0; }
+#tKnob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #dadada 60%, #a8a8a8); border: 2px solid #000; box-shadow: 0 3px 8px rgba(0,0,0,.5); pointer-events: none; }
+#tKnob::after { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #f3c64a; border: 2px solid #000; }
+/* deslizador de gases (avión) o de altura (helicóptero: vuelve al centro) */
+#tThr { position: absolute; right: calc(18px + env(safe-area-inset-right)); bottom: 18px; width: 62px; height: min(200px, 47vh); border-radius: 14px; background: rgba(0,0,0,.42); border: 2px solid rgba(0,0,0,.9); box-shadow: inset 0 0 0 2px rgba(255,255,255,.3); overflow: hidden; }
+#tThrFill { position: absolute; left: 4px; right: 4px; bottom: 4px; height: 0; max-height: calc(100% - 8px); background: linear-gradient(#f7d86a, #d49a1a); opacity: .85; border-radius: 9px; pointer-events: none; }
+#tThr .tick { position: absolute; left: 9px; right: 9px; height: 2px; background: rgba(255,255,255,.35); pointer-events: none; }
+#touch.heli #tThr .tick:nth-of-type(2) { background: #f3c64a; height: 3px; }
+#tThrHandle { position: absolute; left: 3px; right: 3px; height: 28px; bottom: 0; border-radius: 9px; background: #fff; border: 2px solid #000; box-sizing: border-box; box-shadow: 0 2px 6px rgba(0,0,0,.5); pointer-events: none; display: flex; align-items: center; justify-content: center; }
+#tThrHandle b { font: 400 15px Impact, "Arial Black", sans-serif; color: #111; }
+#tThr span { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font: 400 12px Impact, "Arial Black", sans-serif; letter-spacing: .5px; color: #fff; pointer-events: none; text-shadow: 0 1px 2px #000; }
+#tBrake, #tHand { position: absolute; right: calc(92px + env(safe-area-inset-right)); bottom: 18px; width: 64px; height: 64px; line-height: 1.15; }
+#touch #tBrake, #touch #tHand, #tPedals small { font: 400 13px Impact, "Arial Black", sans-serif; letter-spacing: .5px; }
+#tPedals { position: absolute; right: calc(18px + env(safe-area-inset-right)); bottom: 18px; display: flex; flex-direction: column; gap: 10px; }
+#tPedals button { width: 80px; height: 70px; border-radius: 18px; font-size: 26px; line-height: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#tPedals small { margin-top: 3px; }
+#touch #tGas { height: 92px; background: rgba(40,150,80,.55); }
+#touch #tGas.on, #touch #tGas:active { background: rgba(80,205,120,.92); }
+#touch #tRev { background: rgba(160,35,35,.5); }
+#tStrafe { position: absolute; right: calc(92px + env(safe-area-inset-right)); bottom: 94px; display: flex; gap: 8px; }
+#tStrafe button { width: 54px; height: 54px; font-size: 20px; }
+#tAct { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 8px; }
+#tAct button { width: 52px; height: 52px; font-size: 18px; border-radius: 14px; }
+/* barra de arriba: lo esencial; el resto se abre con ⋯ */
+#tBtns { position: absolute; top: calc(6px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+#tBtns button, #tMore button { width: 40px; height: 40px; font-size: 18px; border-radius: 12px; }
+#tMore { position: absolute; top: calc(54px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: none; gap: 6px; padding: 6px; background: rgba(8,8,8,.86); border: 2px solid #000; box-shadow: inset 0 0 0 2px rgba(243,198,74,.6); border-radius: 14px; flex-wrap: wrap; justify-content: center; width: max-content; max-width: 92vw; z-index: 2; }
+#touch.more #tMore { display: flex; }
+#touch.more #tMoreBtn { background: rgba(243,198,74,.92); color: #111; }
+body:has(#touch.more) #hint, body:has(#touch.more) #poi { visibility: hidden; }
+
+/* ----- Pantallas táctiles: HUD compacto, radar y hora arriba a la derecha, avisos que no tapan los mandos ----- */
+canvas { touch-action: none; }
+body.touch #help, body.touch #hgKeys, body.touch #title, body.hg #title { display: none; }
+body.touch #hud { left: calc(10px + env(safe-area-inset-left)); bottom: auto; top: calc(8px + env(safe-area-inset-top)); padding: 4px 8px; font-size: 12px; min-width: 0; line-height: 1.25; border-radius: 10px; }
+body.touch #hud .big { font-size: 22px; }
+body.touch #hud .lb, body.touch #vsRow, body.touch #thrRow { display: none; }
+body.touch #hdgRow, body.touch #xtra { font-size: 10px; opacity: .92; }
+body.touch #xtra { max-width: 170px; }
+body.touch #fps { top: auto; bottom: 2px; left: 50%; transform: translateX(-50%); }
+body.touch #mapbox { right: calc(8px + env(safe-area-inset-right)); bottom: auto; top: calc(6px + env(safe-area-inset-top)); font-size: 10px; line-height: 1.3; }
+body.touch #mm { width: 108px; height: 108px; }
+body.touch.drive #mm { width: 136px; height: 136px; }
+body.touch #street { font-size: 11px; max-width: 140px; margin: 0 auto 2px; }
+#mmClock { display: none; }
+body.touch #mmClock { display: block; font-size: 10px; opacity: .92; }
+body.touch #poi { top: calc(52px + env(safe-area-inset-top)); font-size: 13px; left: 22%; right: 22%; }
+body.touch #mission { top: calc(52px + env(safe-area-inset-top)); font-size: 12px; padding: 4px 10px; min-width: 160px; max-width: 46vw; }
+body.touch #instr { width: 210px; height: 84px; bottom: 70px; }
+body.touch #toasts { bottom: auto; top: calc(100px + env(safe-area-inset-top)); right: auto; left: 50%; transform: translateX(-50%); }
+body.touch #msg { top: auto; bottom: 34%; font-size: 22px; }
+body.touch #hint { top: calc(74px + env(safe-area-inset-top)); bottom: auto; left: 22%; right: 22%; font-size: 13px; }
+body.touch #warn { bottom: 3px; font-size: 11px; left: 25%; right: 25%; }
+body.touch #attrib { font-size: 7px; bottom: 1px; opacity: .5; }
+@media (max-height: 620px), (max-width: 900px) {
+  #hangar { padding: 8px; justify-content: flex-end; gap: 6px; background: linear-gradient(rgba(4,12,26,0) 22%, rgba(4,12,26,.92) 58%); }
+  #hgHead { position: absolute; top: 6px; left: 12px; right: auto; text-align: left; }
+  .brand { font-size: 20px; letter-spacing: 5px; text-indent: 0; }
+  .sub, #hgFact { display: none; }
+  #hgStats { margin-top: 1px; font-size: 11px; }
+  #hgBar { gap: 8px; } .tab { padding: 4px 12px; font-size: 12px; } #hgGo { padding: 7px 20px; font-size: 14px; }
+  #cards { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; max-width: 100%; padding: 6px 4px 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  #cards::-webkit-scrollbar { display: none; }
+  .card { flex: 0 0 150px; width: 150px; padding: 6px 8px 8px; border-radius: 12px; }
+  .card:hover, .card.sel { transform: translateY(-3px); }
+  .card img { height: 54px; } .card p, .num { display: none; } .card h3 { font-size: 12px; } .card .vmax { font-size: 16px; }
+  .row { font-size: 9px; margin-top: 1px; } .row span { width: 52px; }
+  #destRow { max-height: 52px; overflow-y: auto; font-size: 11px; } .chip { padding: 2px 8px; font-size: 11px; }
+}
+@media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
+@media (max-width: 720px) { body.touch #tBtns { gap: 5px; } body.touch #tBtns button, body.touch #tMore button { width: 36px; height: 36px; font-size: 16px; } }
+@media (max-height: 420px) {
+  #tStick { width: 124px; height: 124px; bottom: 12px; } #tKnob { width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+  #tThr { bottom: 12px; } #tPedals, #tAct { bottom: 10px; } #tBrake, #tHand { bottom: 12px; }
+  .card .row:last-child { display: none; } .card img { height: 46px; }
+}
+
+/* ----- Estilo GTA San Andreas (se activa con body.gta) ----- */
+body.gta { --o: -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000, -2px -2px 0 #000, 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, 3px 4px 6px rgba(0,0,0,.6); }
+.gta .panel { font-family: Impact, "Arial Black", "Haettenschweiler", sans-serif; letter-spacing: .6px; text-shadow: var(--o); }
+.gta #hud { background: none; backdrop-filter: none; border-radius: 0; font: 400 20px Impact, "Arial Black", sans-serif; text-transform: uppercase; color: #fff; padding: 4px 8px; }
+.gta #hud .big { font-size: 40px; color: #f3c64a; }
+.gta #bar { height: 14px; border: 3px solid #000; border-radius: 0; background: #3a2a05; box-sizing: border-box; }
+.gta #bar i { background: linear-gradient(#f7d86a, #d49a1a); border-radius: 0; }
+.gta #title { left: auto; right: 22px; top: auto; bottom: 262px; text-align: right; font-size: 38px; font-weight: 400; color: #e9d9a8; }
+.gta #title small { font-size: 18px; color: #fff; opacity: 1; }
+.gta #msg { top: auto; bottom: 17%; font-size: 40px; font-weight: 400; color: #fff; text-transform: uppercase; }
+.gta #hint { top: auto; bottom: 11%; font-size: 24px; color: #fff; text-transform: uppercase; }
+.gta #help { background: rgba(0,0,0,.55); backdrop-filter: none; border-radius: 0; border: 2px solid #000; font-family: "Segoe UI", Arial, sans-serif; text-shadow: none; letter-spacing: 0; }
+.gta #mission { background: rgba(0,0,0,.6); border: 3px solid #000; border-radius: 0; font-family: Impact, "Arial Black", sans-serif; text-transform: uppercase; font-size: 18px; letter-spacing: .6px; text-shadow: var(--o); box-shadow: 0 0 0 2px #f3c64a inset; }
+.gta #mission b { color: #f3c64a; }
+.gta .toast { border-radius: 0; border: 3px solid #000; background: rgba(0,0,0,.78); font-family: Impact, "Arial Black", sans-serif; text-transform: uppercase; letter-spacing: .6px; box-shadow: 0 0 0 2px #f3c64a inset; }
+.gta #mm { filter: drop-shadow(0 0 0 #000) drop-shadow(0 0 3px #000) drop-shadow(0 0 3px #000); }
+.gta #loading { font-family: Impact, "Arial Black", sans-serif; letter-spacing: 1px; }
+.gta #poi { font-size: 24px; color: #e9d9a8; text-transform: uppercase; }
+
+.gta.drive #title { bottom: 336px; }
+body.touch.gta #hud { font-size: 14px; } body.touch.gta #hud .big { font-size: 30px; }
+body.touch.gta #pname { font-size: 12px; color: #e9d9a8; }
+body.touch.gta #street { font-size: 13px; } body.touch.gta #mmClock { font-size: 12px; color: #e9d9a8; }
+body.touch.gta #poi { font-size: 15px; } body.touch.gta #msg { font-size: 26px; } body.touch.gta #hint { font-size: 15px; }
+body.touch.gta #mission { font-size: 13px; }

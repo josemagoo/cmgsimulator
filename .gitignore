@@ -1,0 +1,19 @@
+# Configuracion local y secretos
+/api/config.local.php
+.env
+.env.*
+!.env.example
+
+# Cache descargada (conservar la proteccion de Apache)
+/api/_cache/*
+!/api/_cache/.htaccess
+
+# Paquetes generados y herramientas locales
+/dist/
+/.claude/
+/node_modules/
+
+# Archivos del sistema
+Thumbs.db
+.DS_Store
+*.log
